@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L'Ardoise — Restaurant Gastronomique Carcassonne</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Raleway:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --noir:     #0d0d0b;
+    --creme:    #f5f0e8;
+    --or:       #c9a84c;
+    --or-light: #e8d49a;
+    --gris:     #2a2a26;
+    --gris-mid: #5a5a52;
+    --text:     #1a1a16;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Raleway', sans-serif;
+    background: var(--creme);
+    color: var(--text);
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* CURSEUR CUSTOM */
+  .cursor {
+    position: fixed; top: 0; left: 0; z-index: 9999;
+    pointer-events: none;
+  }
+  .cursor-dot {
+    width: 8px; height: 8px;
+    background: var(--or);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    position: absolute;
+    transition: transform 0.1s;
+  }
+  .cursor-ring {
+    width: 36px; height: 36px;
+    border: 1px solid var(--or);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    position: absolute;
+    transition: transform 0.35s cubic-bezier(0.23, 1, 0.32, 1), width 0.3s, height 0.3s, opacity 0.3s;
+    opacity: 0.6;
+  }
+  body:has(a:hover) .cursor-ring,
+  body:has(button:hover) .cursor-ring {
+    width: 56px; height: 56px; opacity: 1;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 2rem 4rem;
+    mix-blend-mode: normal;
+    transition: background 0.4s, backdrop-filter 0.4s;
+  }
+  nav.scrolled {
+    background: rgba(13, 13, 11, 0.92);
+    backdrop-filter: blur(12px);
+    padding: 1.2rem 4rem;
+  }
+  .nav-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.6rem;
+    font-weight: 300;
+    color: var(--creme);
+    letter-spacing: 0.12em;
+    text-decoration: none;
+  }
+  .nav-logo span { color: var(--or); font-style: italic; }
+  .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+  .nav-links a {
+    color: rgba(245,240,232,0.8);
+    text-decoration: none;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    transition: color 0.3s;
+  }
+  .nav-links a:hover { color: var(--or); }
+  .nav-cta {
+    background: transparent;
+    border: 1px solid var(--or);
+    color: var(--or) !important;
+    padding: 0.6rem 1.5rem;
+    transition: background 0.3s, color 0.3s !important;
+  }
+  .nav-cta:hover { background: var(--or) !important; color: var(--noir) !important; }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    height: 100vh;
+    min-height: 700px;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    background: var(--noir);
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background: 
+      radial-gradient(ellipse 80% 60% at 60% 40%, rgba(201,168,76,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 80% at 20% 80%, rgba(201,168,76,0.05) 0%, transparent 50%),
+      linear-gradient(160deg, #0d0d0b 0%, #1a1a14 50%, #0d0d0b 100%);
+  }
+  .hero-grain {
+    position: absolute; inset: 0; opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 180px;
+  }
+  .hero-line {
+    position: absolute;
+    background: linear-gradient(to bottom, transparent, var(--or), transparent);
+    width: 1px; opacity: 0.3;
+  }
+  .hero-line-1 { left: 15%; height: 60%; top: 20%; animation: lineFade 4s ease-in-out infinite; }
+  .hero-line-2 { right: 15%; height: 40%; top: 30%; animation: lineFade 4s ease-in-out 1.5s infinite; }
+  @keyframes lineFade { 0%,100%{opacity:0.15} 50%{opacity:0.4} }
+
+  .hero-content {
+    position: relative; z-index: 2;
+    text-align: center;
+    padding: 2rem;
+    animation: heroReveal 1.4s cubic-bezier(0.23,1,0.32,1) forwards;
+    opacity: 0;
+  }
+  @keyframes heroReveal {
+    from { opacity:0; transform: translateY(30px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+  .hero-eyebrow {
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--or);
+    margin-bottom: 1.8rem;
+    display: flex; align-items: center; justify-content: center; gap: 1rem;
+  }
+  .hero-eyebrow::before, .hero-eyebrow::after {
+    content: ''; display: block; height: 1px; width: 40px; background: var(--or); opacity: 0.5;
+  }
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(4rem, 10vw, 8.5rem);
+    font-weight: 300;
+    color: var(--creme);
+    line-height: 0.95;
+    margin-bottom: 1rem;
+    letter-spacing: -0.01em;
+  }
+  .hero-title em {
+    font-style: italic;
+    color: var(--or);
+    display: block;
+  }
+  .hero-sub {
+    font-size: 0.85rem;
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    color: rgba(245,240,232,0.55);
+    margin-bottom: 3.5rem;
+    text-transform: uppercase;
+  }
+  .hero-actions { display: flex; gap: 1.5rem; justify-content: center; align-items: center; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--or);
+    color: var(--noir);
+    border: none;
+    padding: 1rem 2.5rem;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: none;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.3s, transform 0.3s;
+  }
+  .btn-primary:hover { background: var(--or-light); transform: translateY(-2px); }
+  .btn-ghost {
+    background: transparent;
+    color: rgba(245,240,232,0.7);
+    border: 1px solid rgba(245,240,232,0.25);
+    padding: 1rem 2.5rem;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: none;
+    text-decoration: none;
+    display: inline-block;
+    transition: border-color 0.3s, color 0.3s;
+  }
+  .btn-ghost:hover { border-color: var(--or); color: var(--or); }
+  .hero-scroll {
+    position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    color: rgba(245,240,232,0.35);
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    animation: scrollBounce 2.5s ease-in-out infinite;
+  }
+  .hero-scroll::after {
+    content: ''; display: block; width: 1px; height: 40px;
+    background: linear-gradient(to bottom, rgba(201,168,76,0.5), transparent);
+  }
+  @keyframes scrollBounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(8px)} }
+
+  /* SECTION BASE */
+  section { padding: 7rem 4rem; }
+  .section-label {
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--or);
+    margin-bottom: 1rem;
+    display: flex; align-items: center; gap: 1rem;
+  }
+  .section-label::after { content:''; flex:1; height:1px; background:var(--or); opacity:0.25; max-width:80px; }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-weight: 300;
+    line-height: 1.1;
+    color: var(--text);
+  }
+  .section-title em { font-style: italic; color: var(--or); }
+
+  /* PHILOSOPHIE */
+  #philosophie {
+    background: var(--noir);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6rem;
+    align-items: center;
+    padding: 8rem 4rem;
+  }
+  .philo-visual {
+    position: relative;
+    height: 580px;
+  }
+  .philo-img-main {
+    position: absolute;
+    top: 0; left: 0;
+    width: 75%; height: 80%;
+    background: linear-gradient(135deg, #1e1c14 0%, #2d2a1c 100%);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .philo-img-main svg { width: 60%; opacity: 0.15; }
+  .philo-img-accent {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 55%; height: 55%;
+    background: linear-gradient(135deg, #c9a84c22 0%, #c9a84c11 100%);
+    border: 1px solid rgba(201,168,76,0.2);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .philo-img-accent-inner {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 5rem;
+    font-weight: 300;
+    color: var(--or);
+    opacity: 0.5;
+    font-style: italic;
+  }
+  .philo-year {
+    position: absolute;
+    top: 50%; left: 70%;
+    transform: translate(-50%, -50%);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.7rem;
+    color: var(--or);
+    letter-spacing: 0.2em;
+    writing-mode: vertical-rl;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+  .philo-text .section-title { color: var(--creme); }
+  .philo-text p {
+    color: rgba(245,240,232,0.6);
+    font-weight: 300;
+    line-height: 1.9;
+    margin-top: 2rem;
+    font-size: 0.95rem;
+  }
+  .philo-text p + p { margin-top: 1.2rem; }
+  .philo-stats {
+    display: flex; gap: 3rem; margin-top: 3.5rem;
+    border-top: 1px solid rgba(201,168,76,0.15);
+    padding-top: 2.5rem;
+  }
+  .stat-item { }
+  .stat-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3rem;
+    font-weight: 300;
+    color: var(--or);
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.4);
+    margin-top: 0.3rem;
+  }
+
+  /* MENU */
+  #menu { background: var(--creme); }
+  .menu-header { text-align: center; margin-bottom: 5rem; }
+  .menu-header .section-label { justify-content: center; }
+  .menu-header .section-label::after { display: none; }
+  .menu-header .section-label::before { content:''; flex:1; height:1px; background:var(--or); opacity:0.25; max-width:80px; }
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    background: rgba(0,0,0,0.08);
+  }
+  .menu-card {
+    background: var(--creme);
+    padding: 3.5rem 2.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.4s;
+  }
+  .menu-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(to right, transparent, var(--or), transparent);
+    transform: scaleX(0);
+    transition: transform 0.4s;
+  }
+  .menu-card:hover::before { transform: scaleX(1); }
+  .menu-card:hover { background: #f0ebe0; }
+  .menu-card-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 4rem;
+    font-weight: 300;
+    color: var(--or);
+    opacity: 0.15;
+    line-height: 1;
+    margin-bottom: 1.5rem;
+  }
+  .menu-card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.7rem;
+    font-weight: 400;
+    margin-bottom: 0.8rem;
+    color: var(--text);
+  }
+  .menu-card-desc {
+    font-size: 0.85rem;
+    font-weight: 300;
+    color: var(--gris-mid);
+    line-height: 1.8;
+    margin-bottom: 2rem;
+  }
+  .menu-card-price {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    font-weight: 300;
+    color: var(--or);
+  }
+  .menu-card-tag {
+    position: absolute; top: 1.5rem; right: 1.5rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--or);
+    border: 1px solid var(--or);
+    padding: 0.25rem 0.6rem;
+    opacity: 0.7;
+  }
+
+  /* SIGNATURE */
+  #signature {
+    background: var(--gris);
+    text-align: center;
+    padding: 8rem 4rem;
+  }
+  .signature-quote {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 300;
+    font-style: italic;
+    color: var(--creme);
+    max-width: 800px;
+    margin: 0 auto 2rem;
+    line-height: 1.5;
+    opacity: 0;
+    transition: opacity 0.8s, transform 0.8s;
+    transform: translateY(20px);
+  }
+  .signature-quote.visible { opacity: 1; transform: translateY(0); }
+  .signature-author {
+    font-size: 0.72rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--or);
+  }
+  .signature-sep {
+    width: 60px; height: 1px;
+    background: var(--or);
+    margin: 1.5rem auto;
+    opacity: 0.4;
+  }
+
+  /* EQUIPE */
+  #equipe { background: var(--creme); }
+  .equipe-header { margin-bottom: 4rem; }
+  .equipe-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.5rem; }
+  .equipe-card { position: relative; }
+  .equipe-photo {
+    width: 100%; height: 380px;
+    background: linear-gradient(135deg, #d4cfc4 0%, #c8c2b4 100%);
+    position: relative; overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+  .equipe-photo-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(13,13,11,0.6) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity 0.4s;
+    display: flex; align-items: flex-end; padding: 1.5rem;
+  }
+  .equipe-card:hover .equipe-photo-overlay { opacity: 1; }
+  .equipe-photo-icon {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .equipe-photo-icon span {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 6rem;
+    font-weight: 300;
+    color: rgba(201,168,76,0.25);
+    font-style: italic;
+  }
+  .equipe-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 0.3rem;
+  }
+  .equipe-role {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--or);
+  }
+  .equipe-desc {
+    font-size: 0.85rem;
+    font-weight: 300;
+    color: var(--gris-mid);
+    line-height: 1.8;
+    margin-top: 0.8rem;
+  }
+
+  /* CONTACT */
+  #contact { background: var(--noir); }
+  .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8rem; align-items: start; }
+  .contact-info .section-title { color: var(--creme); margin-bottom: 3rem; }
+  .contact-detail {
+    display: flex; flex-direction: column; gap: 0.3rem;
+    margin-bottom: 2rem;
+  }
+  .contact-detail-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--or);
+    opacity: 0.7;
+  }
+  .contact-detail-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    font-weight: 300;
+    color: var(--creme);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  .contact-detail-value:hover { color: var(--or); }
+  .contact-horaires { margin-top: 3rem; }
+  .contact-horaires-title {
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--or);
+    opacity: 0.7;
+    margin-bottom: 1.2rem;
+  }
+  .horaire-row {
+    display: flex; justify-content: space-between;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid rgba(245,240,232,0.06);
+    font-size: 0.88rem;
+    color: rgba(245,240,232,0.55);
+    font-weight: 300;
+  }
+  .horaire-row span:last-child { color: rgba(245,240,232,0.35); }
+
+  /* FORM */
+  .contact-form { display: flex; flex-direction: column; gap: 1.5rem; }
+  .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+  .form-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.4);
+  }
+  .form-input, .form-select, .form-textarea {
+    background: rgba(245,240,232,0.04);
+    border: 1px solid rgba(245,240,232,0.1);
+    color: var(--creme);
+    padding: 0.9rem 1.2rem;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 300;
+    outline: none;
+    transition: border-color 0.3s, background 0.3s;
+    width: 100%;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--or);
+    background: rgba(201,168,76,0.04);
+  }
+  .form-select { cursor: none; appearance: none; }
+  .form-textarea { resize: vertical; min-height: 100px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .form-submit {
+    background: var(--or);
+    color: var(--noir);
+    border: none;
+    padding: 1.1rem;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: none;
+    transition: background 0.3s, transform 0.3s;
+    margin-top: 0.5rem;
+  }
+  .form-submit:hover { background: var(--or-light); transform: translateY(-2px); }
+
+  /* FOOTER */
+  footer {
+    background: #080806;
+    padding: 3rem 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid rgba(201,168,76,0.1);
+  }
+  .footer-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    font-weight: 300;
+    color: rgba(245,240,232,0.5);
+    text-decoration: none;
+  }
+  .footer-logo span { color: var(--or); font-style: italic; }
+  .footer-copy {
+    font-size: 0.68rem;
+    color: rgba(245,240,232,0.2);
+    letter-spacing: 0.1em;
+  }
+  .footer-links { display: flex; gap: 2rem; }
+  .footer-links a {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.3);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  .footer-links a:hover { color: var(--or); }
+
+  /* SCROLL REVEAL */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.8s cubic-bezier(0.23,1,0.32,1), transform 0.8s cubic-bezier(0.23,1,0.32,1);
+  }
+  .reveal.visible { opacity: 1; transform: none; }
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.35s; }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    nav { padding: 1.5rem 2rem; }
+    nav.scrolled { padding: 1rem 2rem; }
+    .nav-links { display: none; }
+    section { padding: 5rem 2rem; }
+    #philosophie { grid-template-columns: 1fr; gap: 3rem; padding: 5rem 2rem; }
+    .philo-visual { height: 300px; }
+    .menu-grid { grid-template-columns: 1fr; }
+    .equipe-grid { grid-template-columns: 1fr; }
+    .contact-grid { grid-template-columns: 1fr; gap: 3rem; }
+    footer { flex-direction: column; gap: 1.5rem; text-align: center; padding: 2rem; }
+    .footer-links { flex-wrap: wrap; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- CURSEUR -->
+<div class="cursor">
+  <div class="cursor-dot" id="dot"></div>
+  <div class="cursor-ring" id="ring"></div>
+</div>
+
+<!-- NAVIGATION -->
+<nav id="navbar">
+  <a href="#" class="nav-logo">L'<span>Ardoise</span></a>
+  <ul class="nav-links">
+    <li><a href="#philosophie">Notre histoire</a></li>
+    <li><a href="#menu">La carte</a></li>
+    <li><a href="#equipe">L'équipe</a></li>
+    <li><a href="#contact" class="nav-cta">Réserver</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="accueil">
+  <div class="hero-bg"></div>
+  <div class="hero-grain"></div>
+  <div class="hero-line hero-line-1"></div>
+  <div class="hero-line hero-line-2"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">Carcassonne — Depuis 2018</p>
+    <h1 class="hero-title">
+      L'Art<br>
+      <em>de la Table</em>
+    </h1>
+    <p class="hero-sub">Cuisine gastronomique · Terroir occitan · Saison</p>
+    <div class="hero-actions">
+      <a href="#contact" class="btn-primary">Réserver une table</a>
+      <a href="#menu" class="btn-ghost">Découvrir la carte</a>
+    </div>
+  </div>
+  <div class="hero-scroll">Défiler</div>
+</section>
+
+<!-- PHILOSOPHIE -->
+<section id="philosophie">
+  <div class="philo-visual reveal">
+    <div class="philo-img-main">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="40" stroke="#c9a84c" stroke-width="0.5"/>
+        <path d="M30 50 Q50 20 70 50 Q50 80 30 50Z" stroke="#c9a84c" stroke-width="0.5" fill="none"/>
+        <circle cx="50" cy="50" r="5" fill="#c9a84c" opacity="0.4"/>
+      </svg>
+    </div>
+    <div class="philo-img-accent">
+      <div class="philo-img-accent-inner">★</div>
+    </div>
+    <div class="philo-year">Fondé en 2018</div>
+  </div>
+  <div class="philo-text">
+    <p class="section-label">Notre philosophie</p>
+    <h2 class="section-title reveal reveal-delay-1">Une cuisine<br><em>ancrée dans le terroir</em></h2>
+    <p class="reveal reveal-delay-2">Niché au cœur de la Cité Médiévale, L'Ardoise est né d'une conviction simple : la grande cuisine commence au marché. Chaque assiette raconte une rencontre — avec un maraîcher, un éleveur, un pêcheur de l'Aude.</p>
+    <p class="reveal reveal-delay-2">Notre chef, formé dans les grandes maisons parisiennes, a choisi de revenir aux sources pour sublimer les produits d'exception de l'Occitanie. Ici, la technique est au service de la vérité du produit.</p>
+    <div class="philo-stats reveal reveal-delay-3">
+      <div class="stat-item">
+        <div class="stat-num">7</div>
+        <div class="stat-label">Ans d'excellence</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">95%</div>
+        <div class="stat-label">Produits locaux</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">★★</div>
+        <div class="stat-label">Guide Michelin</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MENU -->
+<section id="menu">
+  <div class="menu-header">
+    <p class="section-label">La carte du moment</p>
+    <h2 class="section-title reveal">Créations <em>de saison</em></h2>
+  </div>
+  <div class="menu-grid">
+    <div class="menu-card reveal">
+      <div class="menu-card-num">01</div>
+      <div class="menu-card-tag">Entrée</div>
+      <h3 class="menu-card-title">Foie gras de canard confit</h3>
+      <p class="menu-card-desc">Chutney de figues de l'Hérault, brioche maison toastée, fleur de sel de Camargue et poivre long de Java.</p>
+      <div class="menu-card-price">24 €</div>
+    </div>
+    <div class="menu-card reveal reveal-delay-1">
+      <div class="menu-card-num">02</div>
+      <div class="menu-card-tag">Signature</div>
+      <h3 class="menu-card-title">Agneau de l'Aveyron en croûte d'herbes</h3>
+      <p class="menu-card-desc">Jus corsé au romarin, gratin dauphinois à la truffe noire du Périgord, haricots verts du marché.</p>
+      <div class="menu-card-price">38 €</div>
+    </div>
+    <div class="menu-card reveal reveal-delay-2">
+      <div class="menu-card-num">03</div>
+      <div class="menu-card-tag">Dessert</div>
+      <h3 class="menu-card-title">Tarte fine aux abricots rôtis</h3>
+      <p class="menu-card-desc">Crème légère à la lavande de Provence, amandes effilées torréfiées, sorbet citron-basilic.</p>
+      <div class="menu-card-price">16 €</div>
+    </div>
+    <div class="menu-card reveal">
+      <div class="menu-card-num">04</div>
+      <div class="menu-card-tag">Menu dégustation</div>
+      <h3 class="menu-card-title">Le Menu L'Ardoise</h3>
+      <p class="menu-card-desc">6 services composés chaque semaine par le chef selon les arrivages. Accord mets et vins disponible.</p>
+      <div class="menu-card-price">85 €</div>
+    </div>
+    <div class="menu-card reveal reveal-delay-1">
+      <div class="menu-card-num">05</div>
+      <div class="menu-card-tag">Végétarien</div>
+      <h3 class="menu-card-title">Risotto de céréales anciennes</h3>
+      <p class="menu-card-desc">Parmesan affiné 24 mois, champignons sauvages de saison, huile de truffe blanche, herbes fraîches.</p>
+      <div class="menu-card-price">26 €</div>
+    </div>
+    <div class="menu-card reveal reveal-delay-2">
+      <div class="menu-card-num">06</div>
+      <div class="menu-card-tag">Poisson</div>
+      <h3 class="menu-card-title">Daurade royale de Méditerranée</h3>
+      <p class="menu-card-desc">Vierge d'agrumes et herbes aromatiques, fenouil braisé à l'anis, émulsion de bouillabaisse.</p>
+      <div class="menu-card-price">34 €</div>
+    </div>
+  </div>
+</section>
+
+<!-- SIGNATURE QUOTE -->
+<section id="signature">
+  <p class="signature-author">Chef Étienne Maurel</p>
+  <div class="signature-sep"></div>
+  <blockquote class="signature-quote">
+    « Cuisiner, c'est raconter une histoire.<br>La nôtre commence toujours au marché, à l'aube. »
+  </blockquote>
+</section>
+
+<!-- EQUIPE -->
+<section id="equipe">
+  <div class="equipe-header">
+    <p class="section-label">Les visages de L'Ardoise</p>
+    <h2 class="section-title reveal">Une équipe <em>passionnée</em></h2>
+  </div>
+  <div class="equipe-grid">
+    <div class="equipe-card reveal">
+      <div class="equipe-photo">
+        <div class="equipe-photo-icon"><span>É</span></div>
+        <div class="equipe-photo-overlay"></div>
+      </div>
+      <div class="equipe-name">Étienne Maurel</div>
+      <div class="equipe-role">Chef exécutif & Fondateur</div>
+      <p class="equipe-desc">Formé au Taillevent et chez Régis Marcon, Étienne a choisi Carcassonne pour y exprimer une cuisine profondément enracinée dans le sud.</p>
+    </div>
+    <div class="equipe-card reveal reveal-delay-1">
+      <div class="equipe-photo">
+        <div class="equipe-photo-icon"><span>C</span></div>
+        <div class="equipe-photo-overlay"></div>
+      </div>
+      <div class="equipe-name">Clara Fontaine</div>
+      <div class="equipe-role">Chef pâtissière</div>
+      <p class="equipe-desc">Ancienne de Ladurée Paris, Clara sublime les fruits du terroir occitan en créations sucrées d'une délicatesse rare.</p>
+    </div>
+    <div class="equipe-card reveal reveal-delay-2">
+      <div class="equipe-photo">
+        <div class="equipe-photo-icon"><span>M</span></div>
+        <div class="equipe-photo-overlay"></div>
+      </div>
+      <div class="equipe-name">Marc Tessier</div>
+      <div class="equipe-role">Sommelier</div>
+      <p class="equipe-desc">Meilleur Sommelier du Languedoc 2021, Marc compose des accords entre vins de la région et créations du chef avec une précision poétique.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT / RÉSERVATION -->
+<section id="contact">
+  <div class="contact-grid">
+    <div class="contact-info">
+      <p class="section-label" style="color:var(--or)">Nous trouver</p>
+      <h2 class="section-title reveal">Réserver<br><em>votre table</em></h2>
+      <div class="contact-detail reveal reveal-delay-1">
+        <span class="contact-detail-label">Adresse</span>
+        <span class="contact-detail-value">12 Rue Trivalle, 11000 Carcassonne</span>
+      </div>
+      <div class="contact-detail reveal reveal-delay-1">
+        <span class="contact-detail-label">Téléphone</span>
+        <a href="tel:+33468001234" class="contact-detail-value">04 68 00 12 34</a>
+      </div>
+      <div class="contact-detail reveal reveal-delay-2">
+        <span class="contact-detail-label">Email</span>
+        <a href="mailto:contact@lardoise-carcassonne.fr" class="contact-detail-value">contact@lardoise-carcassonne.fr</a>
+      </div>
+      <div class="contact-horaires reveal reveal-delay-2">
+        <p class="contact-horaires-title">Horaires d'ouverture</p>
+        <div class="horaire-row"><span>Mardi — Jeudi</span><span>12h–14h / 19h–22h</span></div>
+        <div class="horaire-row"><span>Vendredi — Samedi</span><span>12h–14h / 19h–23h</span></div>
+        <div class="horaire-row"><span>Dimanche</span><span>12h–15h (brunch)</span></div>
+        <div class="horaire-row"><span>Lundi</span><span>Fermé</span></div>
+      </div>
+    </div>
+    <div class="reveal reveal-delay-1">
+      <form class="contact-form" onsubmit="handleSubmit(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Prénom</label>
+            <input type="text" class="form-input" placeholder="Jean">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nom</label>
+            <input type="text" class="form-input" placeholder="Dupont">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" placeholder="jean@exemple.fr">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Couverts</label>
+            <select class="form-select form-input">
+              <option>1 personne</option>
+              <option selected>2 personnes</option>
+              <option>3 personnes</option>
+              <option>4 personnes</option>
+              <option>5+ personnes</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Message (allergies, occasions spéciales...)</label>
+          <textarea class="form-textarea form-input" placeholder="Un détail à nous communiquer ?"></textarea>
+        </div>
+        <button type="submit" class="form-submit">Envoyer la demande de réservation</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <a href="#" class="footer-logo">L'<span>Ardoise</span></a>
+  <p class="footer-copy">© 2026 L'Ardoise — Carcassonne · Réalisé par Merlin — Développeur WordPress freelance</p>
+  <div class="footer-links">
+    <a href="#">Mentions légales</a>
+    <a href="#">Instagram</a>
+    <a href="#">Tripadvisor</a>
+  </div>
+</footer>
+
+<script>
+  // Curseur custom
+  const dot = document.getElementById('dot');
+  const ring = document.getElementById('ring');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  function animateCursor() {
+    dot.style.left = mx + 'px'; dot.style.top = my + 'px';
+    rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+    requestAnimationFrame(animateCursor);
+  }
+  animateCursor();
+
+  // Nav scroll
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 60);
+  });
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+  }, { threshold: 0.12 });
+  reveals.forEach(el => observer.observe(el));
+
+  // Quote reveal
+  const quote = document.querySelector('.signature-quote');
+  const quoteObs = new IntersectionObserver(([e]) => {
+    if (e.isIntersecting) quote.classList.add('visible');
+  }, { threshold: 0.5 });
+  quoteObs.observe(quote);
+
+  // Form submit
+  function handleSubmit(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('.form-submit');
+    btn.textContent = '✓ Demande envoyée — nous vous confirmons sous 24h';
+    btn.style.background = '#4a7c4e';
+    btn.style.color = '#fff';
+  }
+</script>
+</body>
+</html>
